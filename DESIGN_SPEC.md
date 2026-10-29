@@ -33,8 +33,20 @@ Gameplay is LAN-only. The cloud backend is involved only for AI generation and s
 
 - Host app UI: React Native (Expo dev build), so iOS later is a port rather than a rewrite.
 - Embedded server: prefer a **native Kotlin/Java module** (for example NanoHTTPD plus Java-WebSocket, or an equivalent) running inside an Android **foreground service**, exposed to React Native through a bridge. JS-socket libraries are an acceptable alternative only if the Phase 0 spike shows they are equally stable. Server stability is the top technical risk; choose by measurement, not preference.
-- Player and TV client: a single lightweight web bundle (no framework required; small is better because TV browsers run old engines). It is bundled in the app and served from the device.
+- Player and TV client: a single **Preact** web bundle, built and bundled in the app and served from the device. Small is still better because TV browsers run old engines; Preact is small enough. See §2.2.
 - The server is the authority on game state and time. Client countdowns are cosmetic.
+
+### 2.2 Web UI standards (mandatory)
+
+- Scope: the web pages that players' phones and the TV open in a browser. Players have no app. The only app is the host app, which is React Native, fixed and not up for change.
+- **All web UI is built with Preact. No vanilla-JS UI code anywhere**: no hand-built DOM manipulation, no `innerHTML` templating, no imperative widget code. This applies to every phase, including the Phase 0 spike.
+- **Component-based architecture, designed up front.** Small, single-purpose components with clear props; presentational components separated from state and container logic; shared primitives (Button, Card, Countdown, QRPanel, ScoreList, AnswerInput variants) reused across the player and TV views rather than duplicated.
+- **One client, two modes.** The TV display is the same component tree as the player client with input components not rendered, not a second codebase.
+- **State:** game state arrives from the server over WebSocket into a single store (for example Preact Signals); components subscribe and never talk to the socket directly.
+- **Theming through design tokens.** All color, typography, spacing, radius and motion values are defined once as CSS custom properties (a token file), with a deliberately chosen palette and type scale. Components use tokens only; no hard-coded colors or ad-hoc pixel values. Light and dark variants come from tokens. The TV gets its own scale tokens (larger type, higher contrast) rather than separate styles.
+- **CSS discipline:** styles scoped per component (CSS Modules or an equivalent), no inline style sprawl, no global overrides, no `!important`.
+- **Build:** Vite with a legacy browser target matched to the oldest Samsung/LG TV browser we support (versions confirmed in Phase 0). JSX is compiled at build time.
+- **Quality bar:** code that reads as deliberately designed. Before building a screen, sketch its component breakdown and the tokens it uses.
 
 ---
 
@@ -231,7 +243,7 @@ Waiting/lobby, question with input, "answer locked in," reveal (own result: corr
 ### 7.3 TV display
 - Opened manually in the TV browser. The host app shows the URL in large text for typing (targets: Samsung, LG). The TV is **strictly optional**: the game never waits on it.
 - Shows everything players see, minus input controls: lobby with a big QR code, questions and countdowns, and the **room reveal** (for closest-numeric, every guess ranked with busts marked), round and final scores.
-- Built for old browser engines: plain JS and CSS, large type, high contrast, no heavy frameworks.
+- Built for old browser engines: Preact compiled to a legacy target (§2.2), large type, high contrast via the TV token scale, no heavy dependencies.
 
 ---
 
@@ -284,7 +296,8 @@ Designing for these means not blocking them.
 ### Phase 0 — Spike (throwaway code)
 Goal: prove phone-as-server is reliable before building anything else.
 
-- Android app with a foreground service serving a static page plus WebSocket.
+- Android app with a foreground service serving a Preact page (per §2.2; throwaway logic, but no vanilla-JS UI) plus WebSocket.
+- Record the browser engine versions of the target Samsung and LG TVs to set the Vite legacy build target.
 - 10 phones and a Samsung or LG TV browser connected; broadcast a counter and collect taps.
 - Test on home Wi-Fi, on the phone's regular hotspot, and with LocalOnlyHotspot.
 - Measure: join time from scan, message latency, reconnect after refresh or network blip, and survival over 30+ minutes with the host screen dimmed or off.

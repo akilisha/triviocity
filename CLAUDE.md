@@ -12,5 +12,9 @@
 - Never re-apply a change that was previously rejected.
 - Ask before adding a new dependency.
 
+## Web UI rule
+- The only app is the host app, which is React Native; do not propose alternatives. Players and the TV use web pages in a browser, not an app, and those pages are Preact. Never write vanilla-JS UI (DOM manipulation, `innerHTML`, imperative widgets), not even in spikes.
+- Follow spec §2.2: component-based architecture planned before coding, shared components across player and TV views, a single state store, design tokens as CSS custom properties for every color, type and spacing value, and scoped component styles. Hard-coded colors or ad-hoc styles are defects.
+
 ## Product rule
 - Every change is judged against the usability benchmark in spec §1. If a change makes the first-time host or player experience harder, raise it before building it.
