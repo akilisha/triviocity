@@ -32,7 +32,7 @@ Gameplay is LAN-only. The cloud backend is involved only for AI generation and s
 ### 2.1 Stack guidance
 
 - Host app UI: React Native (Expo dev build), so iOS later is a port rather than a rewrite.
-- Embedded server: prefer a **native Kotlin/Java module** (for example NanoHTTPD plus Java-WebSocket, or an equivalent) running inside an Android **foreground service**, exposed to React Native through a bridge. JS-socket libraries are an acceptable alternative only if the Phase 0 spike shows they are equally stable. Server stability is the top technical risk; choose by measurement, not preference.
+- Embedded server: prefer a **native Kotlin/Java module** (for example NanoHTTPD plus Java-WebSocket, or an equivalent) running inside an Android **foreground service**, exposed to React Native through a bridge. The only JS alternative, considered only if the Phase 0 spike shows the native server is unstable, is an **embedded Node.js runtime** (for example nodejs-mobile with `ws`) running in the foreground service. Socket libraries that run on the React Native JS thread (for example react-native-tcp-socket) are excluded: JS timers can be throttled with the screen off, which breaks server-authoritative timing. Server stability is the top technical risk; choose by measurement, not preference.
 - Player and TV client: a single **Preact** web bundle, built and bundled in the app and served from the device. Small is still better because TV browsers run old engines; Preact is small enough. See §2.2.
 - The server is the authority on game state and time. Client countdowns are cosmetic.
 
@@ -302,7 +302,7 @@ Goal: prove phone-as-server is reliable before building anything else.
 - Test on home Wi-Fi, on the phone's regular hotspot, and with LocalOnlyHotspot.
 - Measure: join time from scan, message latency, reconnect after refresh or network blip, and survival over 30+ minutes with the host screen dimmed or off.
 - Check how self-signed HTTPS warnings appear on Android Chrome, iOS Safari, Samsung and LG browsers (to inform §3.4).
-- Compare native-module server vs a JS-socket server if there is any doubt.
+- Compare the native-module server against an embedded Node.js server only if the native server shows instability (§2.1).
 
 **Exit criteria:** zero dropped sessions over 30 minutes, median join time well under 15 seconds, automatic reconnect working, and decisions recorded for §3.3 and §3.4. If this phase is flaky, stop and fix it here; nothing else matters until it isn't.
 
@@ -325,7 +325,7 @@ Backend: Clerk auth, subscription and free allowance, metering, provider abstrac
 
 1. HTTPS: Path A (per-device trusted certificate) vs Path B (HTTP plus workarounds). Needs a list of required HTTPS-only browser features plus Phase 0 results.
 2. Hotspot fallback: LocalOnlyHotspot vs regular hotspot (Phase 0).
-3. Embedded server implementation: native module vs JS sockets (Phase 0).
+3. Embedded server implementation: native module vs embedded Node.js (Phase 0; React Native JS-thread sockets are excluded, §2.1).
 4. Payment provider for subscriptions.
 5. Size of the free AI allowance (configurable; set from real cost data).
 6. Default durations per style (tune in usability tests).

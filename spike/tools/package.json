@@ -1,0 +1,11 @@
+{
+  "name": "triviocity-spike-tools",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "loadtest": "node loadtest.mjs"
+  },
+  "dependencies": {
+    "ws": "^8.22.0"
+  }
+}

@@ -1,0 +1,3 @@
+node_modules/
+# Built by spike/web (npm run build); rebuilt before every Android build.
+host-app/modules/spike-server/android/src/main/assets/web/
