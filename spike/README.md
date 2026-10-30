@@ -8,7 +8,7 @@ automatic reconnect working, and decisions recorded for §3.3 and §3.4. Write r
 | Folder | What |
 |---|---|
 | `web/` | Preact client: player (default), TV (`?mode=tv`), diagnostics (`?mode=diag`). See `web/COMPONENTS.md`. |
-| `host-app/` | Expo dev build. `modules/spike-server` is the native Kotlin server: NanoHTTPD on port 8080 (page, `/config.json`, `/stats.json`, `/log.jsonl`) and Java-WebSocket on port 8081, inside a foreground service with wake and Wi-Fi locks. |
+| `host-app/` | Expo dev build. `modules/spike-server` is the native Kotlin server: NanoHTTPD on port 8080 (page, `/config.json`, `/stats.json`, `/log.jsonl`) and Java-WebSocket on port 8090, inside a foreground service with wake and Wi-Fi locks. |
 | `tools/` | `loadtest.mjs` (simulated players) and `https-check.mjs` (self-signed HTTPS warning check). |
 
 ## Build and install (Windows laptop, S21 over USB)

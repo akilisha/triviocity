@@ -30,7 +30,11 @@ class SpikeServer(
 
   fun start() {
     log.write("server_start", mapOf("httpPort" to httpPort, "wsPort" to wsPort))
+    // Java-WebSocket binds on its own thread and reports failure asynchronously; wait for it so a
+    // taken port fails start() instead of leaving players with a page and no socket.
     ws.start()
+    if (!ws.started.await(5, TimeUnit.SECONDS)) throw IllegalStateException("WebSocket server did not start on port $wsPort")
+    ws.startError?.let { throw IllegalStateException("WebSocket port $wsPort: ${it.message}", it) }
     http.start(NanoHTTPD.SOCKET_READ_TIMEOUT, false)
     // A task that throws is silently cancelled by the executor, so guard the periodic ones.
     loop.scheduleAtFixedRate(guarded("tick") { game.tick() }, 1, 1, TimeUnit.SECONDS)

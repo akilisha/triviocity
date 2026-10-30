@@ -116,7 +116,8 @@ class SpikeService : Service() {
 
   companion object {
     const val HTTP_PORT = 8080
-    const val WS_PORT = 8081
+    // Not 8081: that is Metro's port, which a dev build forwards to the phone over adb.
+    const val WS_PORT = 8090
     private const val ACTION_STOP = "com.triviocity.spike.STOP"
     private const val CHANNEL_ID = "server"
     private const val NOTIFICATION_ID = 1

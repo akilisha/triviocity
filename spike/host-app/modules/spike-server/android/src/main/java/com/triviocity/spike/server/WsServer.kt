@@ -4,6 +4,7 @@ import org.java_websocket.WebSocket
 import org.java_websocket.handshake.ClientHandshake
 import org.java_websocket.server.WebSocketServer
 import java.net.InetSocketAddress
+import java.util.concurrent.CountDownLatch
 
 /** Java-WebSocket transport. It only hands events to the game loop; it holds no state. */
 class WsServer(
@@ -12,6 +13,13 @@ class WsServer(
   private val game: Game,
   private val log: EventLog,
 ) : WebSocketServer(InetSocketAddress(port)) {
+  /** Released once the listener is bound or has failed to bind; see [startError]. */
+  val started = CountDownLatch(1)
+
+  @Volatile
+  var startError: Exception? = null
+    private set
+
   init {
     isReuseAddr = true
     isTcpNoDelay = true
@@ -21,6 +29,7 @@ class WsServer(
 
   override fun onStart() {
     log.write("ws_listening", mapOf("port" to port))
+    started.countDown()
   }
 
   override fun onOpen(conn: WebSocket, handshake: ClientHandshake) {
@@ -38,5 +47,10 @@ class WsServer(
 
   override fun onError(conn: WebSocket?, ex: Exception) {
     log.write("ws_error", mapOf("error" to ex.toString()))
+    // No connection means the server itself failed, for example the port is already taken.
+    if (conn == null && started.count > 0) {
+      startError = ex
+      started.countDown()
+    }
   }
 }
