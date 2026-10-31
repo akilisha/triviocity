@@ -81,7 +81,8 @@ device runs above are what count.
 - §3.3 hotspot fallback:
 - §3.4 HTTP vs HTTPS: **decided, plain HTTP** (spec updated). Muted video cannot keep Chrome
   Android screens on, Path A is rejected, screen sleep is accepted with no penalty to the player.
-- §12.3 server implementation (native confirmed, or embedded Node.js needed):
-- Vite legacy target (§2.2): open. The only TV tested is a 2025 model (Chromium 130), which gets
-  the modern bundle. The legacy bundle (placeholder target Chrome 56) is only downloaded by older
-  browsers, so it costs modern TVs nothing. Needs: the oldest Samsung/LG model year we support.
+- §12.3 server implementation: **native Kotlin module confirmed**; no instability seen, so no
+  embedded Node.js (spec updated).
+- Scale soak (10 phones, 30 min): **waived by the owner** (spec §11 updated).
+- Vite legacy target (§2.2): **decided**, keep the Chromium 56 legacy bundle; no minimum TV model
+  year (spec updated). The 2025 Samsung TV (Chromium 130) gets the modern bundle.

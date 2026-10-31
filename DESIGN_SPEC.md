@@ -45,7 +45,7 @@ Gameplay is LAN-only. The cloud backend is involved only for AI generation and s
 - **State:** game state arrives from the server over WebSocket into a single store (for example Preact Signals); components subscribe and never talk to the socket directly.
 - **Theming through design tokens.** All color, typography, spacing, radius and motion values are defined once as CSS custom properties (a token file), with a deliberately chosen palette and type scale. Components use tokens only; no hard-coded colors or ad-hoc pixel values. Light and dark variants come from tokens. The TV gets its own scale tokens (larger type, higher contrast) rather than separate styles.
 - **CSS discipline:** styles scoped per component (CSS Modules or an equivalent), no inline style sprawl, no global overrides, no `!important`.
-- **Build:** Vite with a legacy browser target matched to the oldest Samsung/LG TV browser we support (versions confirmed in Phase 0). JSX is compiled at build time.
+- **Build:** Vite with `@vitejs/plugin-legacy`. JSX is compiled at build time. Current browsers get the modern bundle (Phase 0: the 2025 Samsung TV runs Chromium 130 and gets it). A legacy bundle targeting Chromium 56 (Tizen 4, 2018 TVs) is downloaded only by older browsers, so it costs current devices nothing. No minimum TV model year is set; revisit only if a TV fails to load the game.
 - **Quality bar:** code that reads as deliberately designed. Before building a screen, sketch its component breakdown and the tokens it uses.
 
 ---
@@ -308,6 +308,8 @@ Goal: prove phone-as-server is reliable before building anything else.
 
 **Exit criteria:** zero dropped sessions over 30 minutes, median join time well under 15 seconds, automatic reconnect working, and decisions recorded for §3.3 and §3.4. If this phase is flaky, stop and fix it here; nothing else matters until it isn't.
 
+Owner decision: the 10-phone soak is waived. Accepted evidence is a 54-minute run with one player phone and the TV (host screen off, server never more than 2.2 ms off schedule, every disconnect explained) plus 40 simulated players against the server on a desktop JVM. Results: `spike/RESULTS.md`.
+
 ### Phase 1 — Core game
 Embedded server (production-quality), session/lobby, join flow, player and TV clients, game state machine, closest-numeric and classic multiple-choice styles, all three scoring strategies, starter bank and sample game, manual question creation, question bank, guided game creation with summary screen, host controls (pause, skip, kick, stop), play-another window.
 
@@ -327,7 +329,7 @@ Backend: Clerk auth, subscription and free allowance, metering, provider abstrac
 
 1. ~~HTTPS: Path A vs Path B.~~ Decided in Phase 0: plain HTTP, screens may sleep, no penalty for sleeping (§3.4).
 2. Hotspot fallback: LocalOnlyHotspot vs regular hotspot (Phase 0).
-3. Embedded server implementation: native module vs embedded Node.js (Phase 0; React Native JS-thread sockets are excluded, §2.1).
+3. ~~Embedded server implementation.~~ Decided in Phase 0: the native Kotlin module (NanoHTTPD plus Java-WebSocket in a foreground service). The spike showed no instability, so embedded Node.js was not needed (§2.1).
 4. Payment provider for subscriptions.
 5. Size of the free AI allowance (configurable; set from real cost data).
 6. Default durations per style (tune in usability tests).
