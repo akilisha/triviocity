@@ -15,6 +15,7 @@ each soak run next to this file.
 
 | Browser | Chromium version | Wake Lock over HTTP | Other notes |
 |---|---|---|---|
+| Laptop Chrome (Windows) | 155 | no | Secure context no; crypto.randomUUID, Clipboard API, service worker unavailable; WebSocket, localStorage, CSS custom properties and grid available |
 | Samsung TV 2025 | | | |
 | Android Chrome | | | |
 | Samsung Internet | | | |
@@ -25,17 +26,17 @@ each soak run next to this file.
 | Measurement | Home Wi-Fi | Phone hotspot | LocalOnlyHotspot |
 |---|---|---|---|
 | Join time, stopwatch (median) | | | |
-| Join time, page (`joinMs` median) | | | |
-| Round trip (`rttMs` median / p95) | | | |
+| Join time, page (`joinMs` median) | 9.2 s (one join, includes typing) | | |
+| Round trip (`rttMs` median / p95) | 13 ms / 73 ms | | |
 | Reconnect: refresh | | | |
 | Reconnect: tab reopened | | | |
 | Reconnect: Wi-Fi off 5 s | | | |
 | Reconnect: airplane mode blip | | | |
-| Soak duration, players (real + simulated) | | | |
+| Soak duration, players (real + simulated) | 54 min, 1 real player + 1 viewer, no simulated players | | |
 | Reconnect after screen sleep + unlock | | | |
 | Soak `unexpectedCloses` (network drops) | | | |
-| Soak `sleepCloses` (screen-sleep drops) | | | |
-| Soak `tickLateMs` max | | | |
+| Soak `sleepCloses` (screen-sleep drops) | 2 (Jo's screen turned off twice) | | |
+| Soak `tickLateMs` max | 2.2 ms over 3,233 ticks | | |
 | TV worked | | | |
 
 ## Keeping player screens on (plain HTTP, so no Wake Lock API)
