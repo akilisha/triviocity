@@ -37,7 +37,7 @@ each soak run next to this file.
 | Soak `unexpectedCloses` (network drops) | 2, both the desktop browser (TV and diag tabs), within 45 s of it waking from a 39 min sleep; server heartbeat got no reply for ~22 s. Not Jo, not the server | | |
 | Soak `sleepCloses` (screen-sleep drops) | 2: Jo once, the desktop TV tab once (hidden 13 min). Jo's second sleep came after the stats snapshot and was also a clean sleep drop | | |
 | Soak `tickLateMs` max | 2.2 ms over 3,233 ticks | | |
-| TV worked | Yes, desktop Chrome and Samsung TV. The TV view needed scrolling at 749 px tall; fixed so it fits (see findings) | | |
+| TV worked | Yes, desktop Chrome and Samsung TV. The TV view needed scrolling at 749 px tall; fixed so it fits, confirmed on the Samsung TV (see findings) | | |
 
 ## Findings to carry into Phase 1
 
