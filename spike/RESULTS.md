@@ -55,7 +55,11 @@ Pick the video with `?awake=disc` (default, visible 4rem spinning disc) or `?awa
 | Phone / browser | Variant | Screen stayed on by itself? |
 |---|---|---|
 | Galaxy S25 / Chrome | `tiny` (2 px, near-invisible, muted) | **No**: turned off at the normal timeout |
-| Galaxy S25 / Chrome | `disc` (visible, muted) | |
+| Galaxy S25 / Chrome | `disc` (visible 4rem spinning disc, muted) | **No**: turned off at the normal timeout |
+
+Conclusion so far: on Chrome for Android, a muted video, visible or not, does not keep the
+screen on. Over plain HTTP the game cannot keep a Chrome player's screen awake. Not yet tested:
+iOS Safari, Samsung Internet.
 
 ## Baseline (desktop JVM, before device testing)
 
