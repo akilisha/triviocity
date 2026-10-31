@@ -15,8 +15,8 @@ each soak run next to this file.
 
 | Browser | Chromium version | Wake Lock over HTTP | Other notes |
 |---|---|---|---|
-| Laptop Chrome (Windows) | 155 | no | Secure context no; crypto.randomUUID, Clipboard API, service worker unavailable; WebSocket, localStorage, CSS custom properties and grid available |
-| Samsung TV 2025 | | | |
+| Desktop Chrome (Windows), used as the TV display | 155 | no | Secure context no; crypto.randomUUID, Clipboard API, service worker unavailable; WebSocket, localStorage, CSS custom properties and grid available |
+| Samsung TV 2025 | not tested yet | | |
 | Android Chrome | | | |
 | Samsung Internet | | | |
 | iOS Safari | | | |
@@ -26,18 +26,31 @@ each soak run next to this file.
 | Measurement | Home Wi-Fi | Phone hotspot | LocalOnlyHotspot |
 |---|---|---|---|
 | Join time, stopwatch (median) | | | |
-| Join time, page (`joinMs` median) | 9.2 s (one join, includes typing) | | |
+| Join time, page (`joinMs` median) | 9.2 s (one join): page ready to type at 1.3 s, 7.9 s typing, 48 ms submit to seat | | |
 | Round trip (`rttMs` median / p95) | 13 ms / 73 ms | | |
 | Reconnect: refresh | | | |
 | Reconnect: tab reopened | | | |
 | Reconnect: Wi-Fi off 5 s | | | |
 | Reconnect: airplane mode blip | | | |
-| Soak duration, players (real + simulated) | 54 min, 1 real player + 1 viewer, no simulated players | | |
-| Reconnect after screen sleep + unlock | | | |
-| Soak `unexpectedCloses` (network drops) | | | |
-| Soak `sleepCloses` (screen-sleep drops) | 2 (Jo's screen turned off twice) | | |
+| Soak duration, players (real + simulated) | 54 min, 1 real player (Jo, S25) + desktop Chrome as TV, no simulated players | | |
+| Reconnect after screen sleep + unlock | 2.8 s after ~54 min asleep, same seat (about 2.2 s of it before the phone's connection reached the server) | | |
+| Soak `unexpectedCloses` (network drops) | 2, both the desktop browser (TV and diag tabs), within 45 s of it waking from a 39 min sleep; server heartbeat got no reply for ~22 s. Not Jo, not the server | | |
+| Soak `sleepCloses` (screen-sleep drops) | 2: Jo once, the desktop TV tab once (hidden 13 min). Jo's second sleep came after the stats snapshot and was also a clean sleep drop | | |
 | Soak `tickLateMs` max | 2.2 ms over 3,233 ticks | | |
-| TV worked | | | |
+| TV worked | Desktop Chrome as TV: yes. Samsung TV: not tested yet | | |
+
+## Findings to carry into Phase 1
+
+- **Latency spikes with the host screen off.** Round trips are mostly 6–50 ms but spike to
+  250–1,270 ms roughly every 40 s. Likely the host phone's Wi-Fi power saving: Android only
+  honors the low-latency Wi-Fi lock while the app is in the foreground with the screen on.
+  Server-receive timing (§6.2) makes such a spike count against a player in fastest finger and
+  time-weighted scoring. Needs a decision before fastest finger (Phase 2).
+- **Waking a phone takes ~2 s before its connection reaches the server.** The seat comes back
+  automatically, but the player sees "Reconnecting" for that long.
+- **Measurement quirks (spike only):** a browser tab left open from an earlier server run
+  reported its old 8-hour outage as a reconnect (157 s resume), and a tab that never reported
+  "hidden" (the desktop asleep) reports the whole outage as its resume time (39 min).
 
 ## Keeping player screens on (plain HTTP, so no Wake Lock API)
 
