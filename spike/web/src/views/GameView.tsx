@@ -19,24 +19,26 @@ export function GameView() {
   const me = store.me.value;
 
   return (
-    <Screen title={me ? `${me.emoji} ${me.name}` : 'Triviocity'} status={store.connection.value}>
-      <Card>
-        <div class={styles.stats}>
-          <Stat label="Counter" value={store.counter.value} size="display" />
-          <Stat label={isPlayer ? 'Your taps' : 'Room taps'} value={isPlayer ? (me?.taps ?? 0) : store.totalTaps.value} />
-        </div>
-        {isPlayer && (
-          <div class={styles.tap}>
-            <Button size="huge" onClick={tap} disabled={store.connection.value !== 'open'}>
-              Tap
-            </Button>
+    <Screen title={me ? `${me.emoji} ${me.name}` : 'Triviocity'} status={store.connection.value} fit={!isPlayer}>
+      <div class={isPlayer ? styles.column : styles.board}>
+        <Card fill={!isPlayer}>
+          <div class={styles.stats}>
+            <Stat label="Counter" value={store.counter.value} size="display" />
+            <Stat label={isPlayer ? 'Your taps' : 'Room taps'} value={isPlayer ? (me?.taps ?? 0) : store.totalTaps.value} />
           </div>
-        )}
-        {!isPlayer && <p class={styles.joinHint}>Join at {location.host}</p>}
-      </Card>
-      <Card title={`Players (${store.playersOnline.value} online)`}>
-        <ScoreList players={store.players.value} highlightId={store.myId.value} />
-      </Card>
+          {isPlayer && (
+            <div class={styles.tap}>
+              <Button size="huge" onClick={tap} disabled={store.connection.value !== 'open'}>
+                Tap
+              </Button>
+            </div>
+          )}
+          {!isPlayer && <p class={styles.joinHint}>Join at {location.host}</p>}
+        </Card>
+        <Card title={`Players (${store.playersOnline.value} online)`} fill={!isPlayer}>
+          <ScoreList players={store.players.value} highlightId={store.myId.value} />
+        </Card>
+      </div>
       {isPlayer && (
         <Card title="Connection">
           <KeyValueList

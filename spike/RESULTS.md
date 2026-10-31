@@ -16,7 +16,7 @@ each soak run next to this file.
 | Browser | Chromium version | Wake Lock over HTTP | Other notes |
 |---|---|---|---|
 | Desktop Chrome (Windows), used as the TV display | 155 | no | Secure context no; crypto.randomUUID, Clipboard API, service worker unavailable; WebSocket, localStorage, CSS custom properties and grid available |
-| Samsung TV 2025 | not tested yet | | |
+| Samsung TV 2025 (Tizen 10, Samsung Browser 9.0) | 130.0.6723.116 | no | Viewport 1536 × 749 @1.25x. Secure context no; crypto.randomUUID, Clipboard API, service worker unavailable; WebSocket, localStorage, CSS custom properties and grid available |
 | Android Chrome | | | |
 | Samsung Internet | | | |
 | iOS Safari | | | |
@@ -37,7 +37,7 @@ each soak run next to this file.
 | Soak `unexpectedCloses` (network drops) | 2, both the desktop browser (TV and diag tabs), within 45 s of it waking from a 39 min sleep; server heartbeat got no reply for ~22 s. Not Jo, not the server | | |
 | Soak `sleepCloses` (screen-sleep drops) | 2: Jo once, the desktop TV tab once (hidden 13 min). Jo's second sleep came after the stats snapshot and was also a clean sleep drop | | |
 | Soak `tickLateMs` max | 2.2 ms over 3,233 ticks | | |
-| TV worked | Desktop Chrome as TV: yes. Samsung TV: not tested yet | | |
+| TV worked | Yes, desktop Chrome and Samsung TV. The TV view needed scrolling at 749 px tall; fixed so it fits (see findings) | | |
 
 ## Findings to carry into Phase 1
 
@@ -48,6 +48,11 @@ each soak run next to this file.
   time-weighted scoring. Needs a decision before fastest finger (Phase 2).
 - **Waking a phone takes ~2 s before its connection reaches the server.** The seat comes back
   automatically, but the player sees "Reconnecting" for that long.
+- **TV view must fit the screen.** At the Samsung's 749 CSS px height the original single
+  column pushed the player list below the fold. Now: counter and join address beside a
+  multi-column player list, type sized from the viewport height, page never scrolls (spec §7.3).
+  Checked at 1536 × 749, 1920 × 945 and 1280 × 720 with 30 players. Past ~30 players the list
+  is clipped at 749 px; Phase 1 needs a design for large rooms (for example top N plus a count).
 - **Measurement quirks (spike only):** a browser tab left open from an earlier server run
   reported its old 8-hour outage as a reconnect (157 s resume), and a tab that never reported
   "hidden" (the desktop asleep) reports the whole outage as its resume time (39 min).
@@ -77,4 +82,6 @@ device runs above are what count.
 - §3.4 HTTP vs HTTPS: **decided, plain HTTP** (spec updated). Muted video cannot keep Chrome
   Android screens on, Path A is rejected, screen sleep is accepted with no penalty to the player.
 - §12.3 server implementation (native confirmed, or embedded Node.js needed):
-- Vite legacy target (§2.2):
+- Vite legacy target (§2.2): open. The only TV tested is a 2025 model (Chromium 130), which gets
+  the modern bundle. The legacy bundle (placeholder target Chrome 56) is only downloaded by older
+  browsers, so it costs modern TVs nothing. Needs: the oldest Samsung/LG model year we support.

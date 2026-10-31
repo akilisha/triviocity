@@ -245,6 +245,7 @@ Waiting/lobby, question with input, "answer locked in," reveal (own result: corr
 - Opened manually in the TV browser. The host app shows the URL in large text for typing (targets: Samsung, LG). The TV is **strictly optional**: the game never waits on it.
 - Shows everything players see, minus input controls: lobby with a big QR code, questions and countdowns, and the **room reveal** (for closest-numeric, every guess ranked with busts marked), round and final scores.
 - Built for old browser engines: Preact compiled to a legacy target (§2.2), large type, high contrast via the TV token scale, no heavy dependencies.
+- **The TV view always fits the screen; it never scrolls** (nobody can scroll a TV browser with a remote). Layout and the TV type scale follow the viewport height, because TV browsers report anything from about 720 to 1080 CSS pixels tall (a 2025 Samsung reports 1536 × 749).
 
 ---
 

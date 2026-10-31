@@ -8,6 +8,12 @@
   border-radius: var(--radius-lg);
 }
 
+.fill {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
 .title {
   margin: 0;
   font-size: var(--text-sm);

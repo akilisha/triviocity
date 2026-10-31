@@ -8,6 +8,16 @@
   gap: var(--space-4);
 }
 
+.fit {
+  height: 100vh;
+  overflow: hidden;
+}
+
+.fit .body {
+  flex: 1;
+  min-height: 0;
+}
+
 .header {
   display: flex;
   align-items: center;
