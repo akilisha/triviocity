@@ -1,0 +1,10 @@
+/* Present and playing (some browsers only hold the screen for a rendered video) but not noticeable. */
+.video {
+  position: fixed;
+  right: 0;
+  bottom: 0;
+  width: var(--keep-awake-size);
+  height: var(--keep-awake-size);
+  opacity: var(--opacity-keep-awake);
+  pointer-events: none;
+}

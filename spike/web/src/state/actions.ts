@@ -1,5 +1,6 @@
-import { joining, errorMessage } from './store';
+import { errorMessage, joining, keepAwake } from './store';
 import { markJoinSubmitted, send } from './transport';
+import type { KeepAwakeMethod } from './types';
 
 // What views may do. Views call these; they never touch the transport directly.
 
@@ -12,4 +13,9 @@ export function join(name: string, emoji: string): void {
 
 export function tap(): void {
   send({ t: 'tap' });
+}
+
+export function reportKeepAwake(method: KeepAwakeMethod, detail?: string): void {
+  keepAwake.value = method;
+  send({ t: 'metric', kind: 'keepAwake', method, ...(detail ? { detail } : {}) });
 }

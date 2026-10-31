@@ -66,18 +66,26 @@ players scan the Wi-Fi QR code, then the game QR code). Record everything in RES
    history, (c) turn Wi-Fi off for 5 s then on, (d) airplane mode on/off. Each time the player
    should return to the same seat with the same tap count. "Last reconnect" on the player
    screen and `reconnectMs` in `/stats.json` give the times.
-5. **Soak, 30+ minutes.** 10 phones and the TV joined, plus simulated players from the laptop
+5. **Screen stays on.** Leave a player phone at its normal screen timeout and don't touch it
+   for longer than that timeout. The game should keep the screen on by itself: the player
+   screen's "Keep screen on" row shows how ("Hidden video" over plain HTTP). If the screen goes
+   off anyway, "Screen slept" counts it and the host app shows a screen-sleep drop. Then press
+   the power button, wait 30 s, unlock, and note "Last reconnect" (measured from unlock to
+   being back in the seat).
+6. **Soak, 30+ minutes.** 10 phones and the TV joined, plus simulated players from the laptop
    (on the same network):
 
    ```bash
    cd spike/tools && npm install && node loadtest.mjs <phone-ip> 30 35
    ```
 
-   Turn the S21 screen **off** and leave it on battery. Don't touch the phones. At the end,
-   check the host app and `http://<ip>:8080/stats.json`: `unexpectedCloses` must be 0 and
-   `tickLateMs.max` small (it shows whether the server's clock kept time with the screen off).
+   Turn the S21 screen **off** and leave it on battery. Leave the player phones at their normal
+   screen timeout and don't touch them. At the end, check the host app and
+   `http://<ip>:8080/stats.json`: `unexpectedCloses` (network drops) must be 0, `sleepCloses`
+   shows whether keep-awake held the player screens on, and `tickLateMs.max` shows whether the
+   server's clock kept time with the host screen off.
    Save `http://<ip>:8080/log.jsonl` next to RESULTS.md.
-6. **HTTPS warnings.** On the laptop (Git Bash, which has `openssl`):
+7. **HTTPS warnings.** On the laptop (Git Bash, which has `openssl`):
 
    ```bash
    cd spike/tools && node https-check.mjs
@@ -90,6 +98,10 @@ players scan the Wi-Fi QR code, then the game QR code). Record everything in RES
 ## What counts as a drop
 
 The server logs every socket close. Codes 1000/1001 are clean (tab closed, refresh, navigated
-away) and 4000 means another tab took over the seat. Anything else is counted in
-`unexpectedCloses` and must be explained by a test step (Wi-Fi off, airplane mode) or it is a
-failed run. During the soak there are no test steps, so the count must stay at 0.
+away) and 4000 means another tab took over the seat. Any other close is a drop:
+
+- `sleepCloses`: the player's page had reported itself hidden (screen off) before the drop.
+  These measure keep-awake, not the network. If a page freezes before it can report, the drop
+  is counted as a network drop, so this errs against the server.
+- `unexpectedCloses`: the page was visible. These must be explained by a test step (Wi-Fi off,
+  airplane mode) or the run failed. During the soak there are no test steps, so it must be 0.

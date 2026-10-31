@@ -21,6 +21,11 @@ let lastRtt: number | null = null;
 /** When the connection was lost and why; null while connected. */
 let down: { since: number; cause: string } | null = null;
 let firstWelcome = true;
+/** Last time the page became visible; reconnect time is measured from here if the screen was off. */
+let lastVisibleAt = 0;
+/** Bumped on every visibility change, so a round trip that spanned one is discarded. */
+let visibilityEpoch = 0;
+let pingEpoch = 0;
 const joinTiming = { wsOpen: 0, formShown: 0, submitted: 0 };
 
 export function start(): void {
@@ -29,7 +34,16 @@ export function start(): void {
   setInterval(ping, PING_EVERY_MS);
   window.addEventListener('online', () => reconnectNow('online'));
   document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState === 'visible') reconnectNow('visible');
+    visibilityEpoch++;
+    const hidden = document.visibilityState === 'hidden';
+    // Tell the server first: on screen lock the page freezes right after this event.
+    send({ t: 'visibility', hidden });
+    if (hidden) {
+      store.screenSleeps.value++;
+    } else {
+      lastVisibleAt = performance.now();
+      reconnectNow('visible');
+    }
   });
   // Close cleanly on refresh or tab close, so the server can tell these apart from real drops.
   window.addEventListener('pagehide', () => socket?.close(1000, 'pagehide'));
@@ -65,7 +79,12 @@ async function connect(): Promise<void> {
   ws.onopen = () => {
     lastMessageAt = performance.now();
     if (!joinTiming.wsOpen) joinTiming.wsOpen = lastMessageAt;
-    ws.send(JSON.stringify({ t: 'hello', mode: store.mode.value, token: loadToken(), ua: navigator.userAgent }));
+    ws.send(
+      JSON.stringify({
+        t: 'hello', mode: store.mode.value, token: loadToken(), ua: navigator.userAgent,
+        hidden: document.visibilityState === 'hidden',
+      }),
+    );
   };
   ws.onmessage = (event) => {
     lastMessageAt = performance.now();
@@ -125,6 +144,8 @@ function watchdog(): void {
 
 function ping(): void {
   send({ t: 'ping', id: ++pingId, c: performance.now(), ...(lastRtt === null ? {} : { lastRtt }) });
+  lastRtt = null;
+  pingEpoch = visibilityEpoch;
 }
 
 function handle(message: ServerMessage): void {
@@ -161,10 +182,13 @@ function handle(message: ServerMessage): void {
       store.totalTaps.value = message.total;
       store.viewers.value = message.viewers;
       return;
-    case 'pong':
+    case 'pong': {
+      // A frozen page answers late; those samples measure the sleep, not the network.
+      if (pingEpoch !== visibilityEpoch || document.visibilityState === 'hidden') return;
       lastRtt = Math.round(performance.now() - message.c);
       store.rttMs.value = lastRtt;
       return;
+    }
   }
 }
 
@@ -187,16 +211,18 @@ function reportConnected(freshJoin: boolean): void {
       submitToSeatMs: Math.round(now - joinTiming.submitted),
     });
   } else if (down) {
+    // downMs includes any time the screen was off; resumeMs is what the player actually waited.
     const downMs = Math.round(now - down.since);
+    const resumeMs = Math.round(now - Math.max(down.since, lastVisibleAt));
     store.reconnects.value++;
-    store.lastReconnectMs.value = downMs;
-    send({ t: 'metric', kind: 'reconnect', downMs, cause: down.cause });
+    store.lastReconnectMs.value = resumeMs;
+    send({ t: 'metric', kind: 'reconnect', downMs, resumeMs, cause: down.cause, sleptDuringOutage: lastVisibleAt > down.since });
   } else if (firstWelcome && store.myId.value !== null) {
     // Seat resumed on page load: a refresh or a reopened tab.
     const downMs = Math.round(now);
     store.reconnects.value++;
     store.lastReconnectMs.value = downMs;
-    send({ t: 'metric', kind: 'reconnect', downMs, cause: 'page load' });
+    send({ t: 'metric', kind: 'reconnect', downMs, resumeMs: downMs, cause: 'page load', sleptDuringOutage: false });
   }
   down = null;
   firstWelcome = false;

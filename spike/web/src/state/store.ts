@@ -1,5 +1,5 @@
 import { computed, signal } from '@preact/signals';
-import type { ConnectionStatus, Mode, Player } from './types';
+import type { ConnectionStatus, KeepAwakeMethod, Mode, Player } from './types';
 
 function readMode(): Mode {
   const mode = new URLSearchParams(location.search).get('mode');
@@ -24,6 +24,10 @@ export const reconnects = signal(0);
 export const lastReconnectMs = signal<number | null>(null);
 export const joinMs = signal<number | null>(null);
 export const maxTickGapMs = signal(0);
+/** How (or whether) the game is keeping this phone's screen on. */
+export const keepAwake = signal<KeepAwakeMethod>('starting');
+/** Times this page went hidden (screen locked or slept, app switched). */
+export const screenSleeps = signal(0);
 
 export const me = computed(() => players.value.find((p) => p.id === myId.value) ?? null);
 export const playersOnline = computed(() => players.value.filter((p) => p.online).length);

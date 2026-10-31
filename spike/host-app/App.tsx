@@ -90,7 +90,8 @@ export default function App() {
           <View style={styles.grid}>
             <Metric label="Players online" value={`${status.playersOnline} / ${status.players}`} />
             <Metric label="TV / diag viewers" value={String(status.viewers)} />
-            <Metric label="Unexpected drops" value={String(status.unexpectedCloses)} alert={status.unexpectedCloses > 0} />
+            <Metric label="Network drops" value={String(status.unexpectedCloses)} alert={status.unexpectedCloses > 0} />
+            <Metric label="Screen-sleep drops" value={String(status.sleepCloses)} alert={status.sleepCloses > 0} />
             <Metric label="Uptime" value={`${Math.floor(status.ticks / 60)}m ${status.ticks % 60}s`} />
             <Metric label="Worst tick lateness" value={`${Math.round(status.maxTickLateMs)} ms`} alert={status.maxTickLateMs > 250} />
           </View>

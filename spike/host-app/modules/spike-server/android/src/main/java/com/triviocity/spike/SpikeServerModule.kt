@@ -31,6 +31,7 @@ class SpikeServerModule : Module() {
         "playersOnline" to (snapshot?.playersOnline ?: 0),
         "viewers" to (snapshot?.viewers ?: 0),
         "unexpectedCloses" to (snapshot?.unexpectedCloses ?: 0),
+        "sleepCloses" to (snapshot?.sleepCloses ?: 0),
         "ticks" to (snapshot?.ticks ?: 0L).toDouble(),
         "maxTickLateMs" to (snapshot?.maxTickLateMs ?: 0.0),
         "logFile" to server?.log?.file?.absolutePath,

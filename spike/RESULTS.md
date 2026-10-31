@@ -32,7 +32,10 @@ each soak run next to this file.
 | Reconnect: Wi-Fi off 5 s | | | |
 | Reconnect: airplane mode blip | | | |
 | Soak duration, players (real + simulated) | | | |
-| Soak `unexpectedCloses` | | | |
+| Screen stayed on without touching (method) | | | |
+| Reconnect after power button + unlock | | | |
+| Soak `unexpectedCloses` (network drops) | | | |
+| Soak `sleepCloses` (screen-sleep drops) | | | |
 | Soak `tickLateMs` max | | | |
 | TV worked | | | |
 

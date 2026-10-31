@@ -11,6 +11,7 @@ data class Snapshot(
   val playersOnline: Int,
   val viewers: Int,
   val unexpectedCloses: Int,
+  val sleepCloses: Int,
   val ticks: Long,
   val maxTickLateMs: Double,
 )
@@ -23,6 +24,9 @@ class Player(val id: Int, val token: String, var name: String, var emoji: String
 class Session(val conn: WebSocket, val remote: String, val openedAt: Long) {
   var mode = "unknown"
   var player: Player? = null
+
+  /** The page reported itself hidden (screen off, app switched) and has not come back. */
+  var hidden = false
 }
 
 /**
@@ -42,6 +46,9 @@ class Game(private val log: EventLog) {
   private var minuteMaxLateMs = 0.0
   private var closes = 0
   private var unexpectedCloses = 0
+  private var sleepCloses = 0
+  private var pageHides = 0
+  private val keepAwakeMethods = HashMap<String, Int>()
   private val closeCodes = HashMap<Int, Int>()
   private val rttMs = ArrayList<Int>()
   private val joinMs = ArrayList<Int>()
@@ -49,7 +56,7 @@ class Game(private val log: EventLog) {
   private val startedAt = System.currentTimeMillis()
 
   @Volatile
-  var snapshot = Snapshot(0, 0, 0, 0, 0, 0.0)
+  var snapshot = Snapshot(0, 0, 0, 0, 0, 0, 0.0)
     private set
 
   fun onOpen(conn: WebSocket, remote: String) {
@@ -67,13 +74,17 @@ class Game(private val log: EventLog) {
     closes++
     closeCodes[code] = (closeCodes[code] ?: 0) + 1
     // 1000/1001 are clean closes (tab closed, navigated away, page refreshed); 4000 is our seat handover.
-    // Anything else is a drop the soak test has to account for.
-    if (code != 1000 && code != 1001 && code != CLOSE_REPLACED) unexpectedCloses++
+    // A drop after the page said it was hidden is the phone sleeping, which keep-awake should
+    // prevent; anything else is a network or server drop.
+    val clean = code == 1000 || code == 1001 || code == CLOSE_REPLACED
+    if (!clean && session.hidden) sleepCloses++
+    if (!clean && !session.hidden) unexpectedCloses++
     log.write(
       "ws_close",
       mapOf(
         "remote" to session.remote, "mode" to session.mode, "player" to player?.id, "code" to code,
         "reason" to reason, "byRemote" to byRemote, "durationMs" to System.currentTimeMillis() - session.openedAt,
+        "hidden" to session.hidden,
       ),
     )
     publish()
@@ -91,11 +102,13 @@ class Game(private val log: EventLog) {
       "tap" -> tap(session)
       "ping" -> ping(session, msg)
       "metric" -> metric(session, msg)
+      "visibility" -> visibility(session, msg)
     }
   }
 
   private fun hello(session: Session, msg: JSONObject) {
     session.mode = msg.optString("mode", "player")
+    session.hidden = msg.optBoolean("hidden", false)
     log.write("hello", mapOf("remote" to session.remote, "mode" to session.mode, "ua" to msg.optString("ua")))
     if (session.mode != "player") {
       send(session, JSONObject().put("t", "welcome").put("role", "viewer"))
@@ -161,10 +174,18 @@ class Game(private val log: EventLog) {
     }
   }
 
+  private fun visibility(session: Session, msg: JSONObject) {
+    session.hidden = msg.optBoolean("hidden")
+    if (session.hidden) pageHides++
+    log.write("visibility", mapOf("remote" to session.remote, "player" to session.player?.id, "hidden" to session.hidden))
+  }
+
   private fun metric(session: Session, msg: JSONObject) {
     when (msg.optString("kind")) {
       "join" -> joinMs.add(msg.optInt("totalMs"))
-      "reconnect" -> reconnectMs.add(msg.optInt("downMs"))
+      // How long the player waited once looking at the screen again, not how long it was off.
+      "reconnect" -> reconnectMs.add(msg.optInt("resumeMs", msg.optInt("downMs")))
+      "keepAwake" -> msg.optString("method").let { keepAwakeMethods[it] = (keepAwakeMethods[it] ?: 0) + 1 }
     }
     val fields = HashMap<String, Any?>()
     for (key in msg.keys()) if (key != "t") fields[key] = msg.get(key)
@@ -206,6 +227,9 @@ class Game(private val log: EventLog) {
     .put("viewers", viewers())
     .put("closes", closes)
     .put("unexpectedCloses", unexpectedCloses)
+    .put("sleepCloses", sleepCloses)
+    .put("pageHides", pageHides)
+    .put("keepAwake", JSONObject(keepAwakeMethods as Map<*, *>))
     .put("closeCodes", JSONObject(closeCodes.mapKeys { it.key.toString() }))
     .put("ticks", ticks)
     .put("tickLateMs", summary(tickLateMs))
@@ -227,7 +251,7 @@ class Game(private val log: EventLog) {
 
   private fun publish() {
     snapshot = Snapshot(
-      players.size, playersOnline(), viewers(), unexpectedCloses, ticks, tickLateMs.maxOrNull() ?: 0.0,
+      players.size, playersOnline(), viewers(), unexpectedCloses, sleepCloses, ticks, tickLateMs.maxOrNull() ?: 0.0,
     )
   }
 

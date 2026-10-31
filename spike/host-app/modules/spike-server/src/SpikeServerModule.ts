@@ -14,6 +14,7 @@ export interface ServerStatus {
   playersOnline: number;
   viewers: number;
   unexpectedCloses: number;
+  sleepCloses: number;
   ticks: number;
   maxTickLateMs: number;
   logFile: string | null;

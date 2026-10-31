@@ -1,5 +1,7 @@
 export type Mode = 'player' | 'tv' | 'diag';
 
+export type KeepAwakeMethod = 'starting' | 'wakeLock' | 'video' | 'blocked' | 'failed';
+
 export type ConnectionStatus = 'connecting' | 'open' | 'reconnecting' | 'replaced';
 
 export interface Player {

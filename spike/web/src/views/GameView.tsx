@@ -7,8 +7,17 @@ import { Stat } from '../components/Stat';
 import { tap } from '../state/actions';
 import * as store from '../state/store';
 import styles from './GameView.module.css';
+import { KeepAwake } from './KeepAwake';
 
 const ms = (value: number | null) => (value === null ? '–' : `${value} ms`);
+
+const KEEP_AWAKE_LABELS = {
+  starting: 'Starting…',
+  wakeLock: 'Wake Lock API',
+  video: 'Hidden video',
+  blocked: 'Blocked, tap the screen',
+  failed: 'Failed',
+} as const;
 
 /**
  * The one game screen for players and the TV. The TV is this tree with the input and the
@@ -20,6 +29,7 @@ export function GameView() {
 
   return (
     <Screen title={me ? `${me.emoji} ${me.name}` : 'Triviocity'} status={store.connection.value}>
+      {isPlayer && <KeepAwake />}
       <Card>
         <div class={styles.stats}>
           <Stat label="Counter" value={store.counter.value} size="display" />
@@ -46,6 +56,8 @@ export function GameView() {
               ['Reconnects', String(store.reconnects.value)],
               ['Last reconnect', ms(store.lastReconnectMs.value)],
               ['Longest tick gap', ms(store.maxTickGapMs.value || null)],
+              ['Keep screen on', KEEP_AWAKE_LABELS[store.keepAwake.value]],
+              ['Screen slept', String(store.screenSleeps.value)],
             ]}
           />
         </Card>
