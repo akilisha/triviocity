@@ -48,7 +48,6 @@ class Game(private val log: EventLog) {
   private var unexpectedCloses = 0
   private var sleepCloses = 0
   private var pageHides = 0
-  private val keepAwakeMethods = HashMap<String, Int>()
   private val closeCodes = HashMap<Int, Int>()
   private val rttMs = ArrayList<Int>()
   private val joinMs = ArrayList<Int>()
@@ -74,8 +73,8 @@ class Game(private val log: EventLog) {
     closes++
     closeCodes[code] = (closeCodes[code] ?: 0) + 1
     // 1000/1001 are clean closes (tab closed, navigated away, page refreshed); 4000 is our seat handover.
-    // A drop after the page said it was hidden is the phone sleeping, which keep-awake should
-    // prevent; anything else is a network or server drop.
+    // A drop after the page said it was hidden is the phone sleeping, which is normal (spec §3.4);
+    // anything else is a network or server drop.
     val clean = code == 1000 || code == 1001 || code == CLOSE_REPLACED
     if (!clean && session.hidden) sleepCloses++
     if (!clean && !session.hidden) unexpectedCloses++
@@ -185,7 +184,6 @@ class Game(private val log: EventLog) {
       "join" -> joinMs.add(msg.optInt("totalMs"))
       // How long the player waited once looking at the screen again, not how long it was off.
       "reconnect" -> reconnectMs.add(msg.optInt("resumeMs", msg.optInt("downMs")))
-      "keepAwake" -> msg.optString("method").let { keepAwakeMethods[it] = (keepAwakeMethods[it] ?: 0) + 1 }
     }
     val fields = HashMap<String, Any?>()
     for (key in msg.keys()) if (key != "t") fields[key] = msg.get(key)
@@ -229,7 +227,6 @@ class Game(private val log: EventLog) {
     .put("unexpectedCloses", unexpectedCloses)
     .put("sleepCloses", sleepCloses)
     .put("pageHides", pageHides)
-    .put("keepAwake", JSONObject(keepAwakeMethods as Map<*, *>))
     .put("closeCodes", JSONObject(closeCodes.mapKeys { it.key.toString() }))
     .put("ticks", ticks)
     .put("tickLateMs", summary(tickLateMs))

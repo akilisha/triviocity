@@ -32,34 +32,23 @@ each soak run next to this file.
 | Reconnect: Wi-Fi off 5 s | | | |
 | Reconnect: airplane mode blip | | | |
 | Soak duration, players (real + simulated) | | | |
-| Screen stayed on without touching (method) | | | |
-| Reconnect after power button + unlock | | | |
+| Reconnect after screen sleep + unlock | | | |
 | Soak `unexpectedCloses` (network drops) | | | |
 | Soak `sleepCloses` (screen-sleep drops) | | | |
 | Soak `tickLateMs` max | | | |
 | TV worked | | | |
 
-## HTTPS warnings (self-signed)
-
-| Browser | What the warning looks like | Taps to get past it |
-|---|---|---|
-| Android Chrome | | |
-| iOS Safari | | |
-| Samsung Internet | | |
-| Samsung TV | | |
-
 ## Keeping player screens on (plain HTTP, so no Wake Lock API)
-
-Pick the video with `?awake=disc` (default, visible 4rem spinning disc) or `?awake=tiny`.
 
 | Phone / browser | Variant | Screen stayed on by itself? |
 |---|---|---|
 | Galaxy S25 / Chrome | `tiny` (2 px, near-invisible, muted) | **No**: turned off at the normal timeout |
 | Galaxy S25 / Chrome | `disc` (visible 4rem spinning disc, muted) | **No**: turned off at the normal timeout |
 
-Conclusion so far: on Chrome for Android, a muted video, visible or not, does not keep the
-screen on. Over plain HTTP the game cannot keep a Chrome player's screen awake. Not yet tested:
-iOS Safari, Samsung Internet.
+Conclusion: on Chrome for Android, a muted video, visible or not, does not keep the screen on.
+Over plain HTTP the game cannot keep a Chrome player's screen awake. Decision (spec §3.4): plain
+HTTP, screens may sleep, players are never penalized for it. The keep-awake code was removed
+from the spike.
 
 ## Baseline (desktop JVM, before device testing)
 
@@ -71,6 +60,7 @@ device runs above are what count.
 ## Decisions (update DESIGN_SPEC.md in the same change)
 
 - §3.3 hotspot fallback:
-- §3.4 HTTP vs HTTPS, and the list of HTTPS-only features we need:
+- §3.4 HTTP vs HTTPS: **decided, plain HTTP** (spec updated). Muted video cannot keep Chrome
+  Android screens on, Path A is rejected, screen sleep is accepted with no penalty to the player.
 - §12.3 server implementation (native confirmed, or embedded Node.js needed):
 - Vite legacy target (§2.2):

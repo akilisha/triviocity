@@ -57,8 +57,6 @@
   --content-max: 32rem;
   --border-width: 1px;
   --focus-width: 3px;
-  --keep-awake-size: 2px;
-  --disc-size: 4rem;
 
   /* Motion */
   --motion-fast: 120ms;
@@ -69,7 +67,6 @@
   /* Emphasis */
   --opacity-disabled: 0.5;
   --opacity-offline: 0.45;
-  --opacity-keep-awake: 0.01;
 }
 
 @media (prefers-color-scheme: dark) {

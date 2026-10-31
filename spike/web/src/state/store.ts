@@ -1,13 +1,9 @@
 import { computed, signal } from '@preact/signals';
-import type { ConnectionStatus, KeepAwakeMethod, KeepAwakeVideo, Mode, Player } from './types';
+import type { ConnectionStatus, Mode, Player } from './types';
 
 function readMode(): Mode {
   const mode = new URLSearchParams(location.search).get('mode');
   return mode === 'tv' || mode === 'diag' ? mode : 'player';
-}
-
-function readKeepAwakeVideo(): KeepAwakeVideo {
-  return new URLSearchParams(location.search).get('awake') === 'tiny' ? 'tiny' : 'disc';
 }
 
 /** The single client store. The transport writes it; views read it. */
@@ -28,9 +24,6 @@ export const reconnects = signal(0);
 export const lastReconnectMs = signal<number | null>(null);
 export const joinMs = signal<number | null>(null);
 export const maxTickGapMs = signal(0);
-/** How (or whether) the game is keeping this phone's screen on. */
-export const keepAwake = signal<KeepAwakeMethod>('starting');
-export const keepAwakeVideo = signal<KeepAwakeVideo>(readKeepAwakeVideo());
 /** Times this page went hidden (screen locked or slept, app switched). */
 export const screenSleeps = signal(0);
 

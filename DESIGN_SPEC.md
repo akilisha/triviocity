@@ -68,11 +68,12 @@ Never fail silently. If players can't connect, the host sees a plain-language he
 - Option A: Android **LocalOnlyHotspot**. The app creates its own network with generated credentials and shows a Wi-Fi QR code (scan 1: join network), then the game QR code (scan 2: join game). This bypasses venue isolation entirely.
 - Option B: the host enables the regular phone hotspot manually; the app detects it and shows the game QR code.
 
-### 3.4 HTTP vs HTTPS (OPEN — decide after Phase 0)
-- Self-signed certificates are **rejected for player-facing pages**: every player hits a full-page browser security warning, which fails the 15-second benchmark and looks like malware. Phase 0 should confirm this on Android Chrome, iOS Safari, Samsung and LG TV browsers.
-- Path A: publicly trusted per-device certificates (the Plex `plex.direct` model): a hostname per host install that resolves to the LAN IP, with a certificate issued by the backend through Let's Encrypt DNS validation. Costs: backend certificate service, renewal, and routers with DNS rebind protection breaking resolution (needs a fallback).
-- Path B: plain HTTP with workarounds for HTTPS-only features (for example a hidden looping video to keep player screens awake instead of the Wake Lock API).
-- Decision input needed: the list of HTTPS-only browser features we actually require. If it's short, Path B.
+### 3.4 HTTP vs HTTPS (DECIDED: plain HTTP)
+- **Player and TV pages are served over plain HTTP.** No HTTPS in any form.
+- Rejected: self-signed certificates (every player hits a full-page browser security warning, which fails the 15-second benchmark and looks like malware) and publicly trusted per-device certificates (the Plex `plex.direct` model: needs a backend certificate service, internet at game start, and fails on routers with DNS rebind protection).
+- Consequence: HTTPS-only browser features are unavailable and must not be relied on, including the Wake Lock API, `crypto.randomUUID`, the async Clipboard API and service workers.
+- **Player screens may sleep, and that is normal.** Phase 0 showed there is no plain-HTTP way to keep a screen on: a muted looping video, hidden or visible, does not stop Chrome on Android from sleeping. The game does not try.
+- **A player is never penalized for their screen sleeping.** Their seat, score and identity are kept (§3.5); waking the phone reconnects automatically and lands on the current game state, because the server is the authority (§2.1). The only effect is the one any idle player has: no answer is submitted while the screen is off.
 
 ### 3.5 Reconnection
 - Each player gets a session token in browser storage. A refresh, a reopened tab, or a dropped connection puts them straight back into their seat with their score.
@@ -301,7 +302,7 @@ Goal: prove phone-as-server is reliable before building anything else.
 - 10 phones and a Samsung or LG TV browser connected; broadcast a counter and collect taps.
 - Test on home Wi-Fi, on the phone's regular hotspot, and with LocalOnlyHotspot.
 - Measure: join time from scan, message latency, reconnect after refresh or network blip, and survival over 30+ minutes with the host screen dimmed or off.
-- Check how self-signed HTTPS warnings appear on Android Chrome, iOS Safari, Samsung and LG browsers (to inform §3.4).
+- Check whether anything can keep player screens on over plain HTTP, and how quickly a player is back in their seat after waking the phone (§3.4).
 - Compare the native-module server against an embedded Node.js server only if the native server shows instability (§2.1).
 
 **Exit criteria:** zero dropped sessions over 30 minutes, median join time well under 15 seconds, automatic reconnect working, and decisions recorded for §3.3 and §3.4. If this phase is flaky, stop and fix it here; nothing else matters until it isn't.
@@ -323,7 +324,7 @@ Backend: Clerk auth, subscription and free allowance, metering, provider abstrac
 
 ## 12. Open decisions
 
-1. HTTPS: Path A (per-device trusted certificate) vs Path B (HTTP plus workarounds). Needs a list of required HTTPS-only browser features plus Phase 0 results.
+1. ~~HTTPS: Path A vs Path B.~~ Decided in Phase 0: plain HTTP, screens may sleep, no penalty for sleeping (§3.4).
 2. Hotspot fallback: LocalOnlyHotspot vs regular hotspot (Phase 0).
 3. Embedded server implementation: native module vs embedded Node.js (Phase 0; React Native JS-thread sockets are excluded, §2.1).
 4. Payment provider for subscriptions.

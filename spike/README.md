@@ -2,14 +2,15 @@
 
 Goal (spec §11): prove that a phone can reliably serve the game before anything else is built.
 Exit criteria: zero dropped sessions over 30 minutes, median join time well under 15 seconds,
-automatic reconnect working, and decisions recorded for §3.3 and §3.4. Write results in
+automatic reconnect working, and decisions recorded for §3.3 and §3.4 (§3.4 is decided: plain
+HTTP, player screens may sleep without penalty). Write results in
 [RESULTS.md](RESULTS.md).
 
 | Folder | What |
 |---|---|
 | `web/` | Preact client: player (default), TV (`?mode=tv`), diagnostics (`?mode=diag`). See `web/COMPONENTS.md`. |
 | `host-app/` | Expo dev build. `modules/spike-server` is the native Kotlin server: NanoHTTPD on port 8080 (page, `/config.json`, `/stats.json`, `/log.jsonl`) and Java-WebSocket on port 8090, inside a foreground service with wake and Wi-Fi locks. |
-| `tools/` | `loadtest.mjs` (simulated players) and `https-check.mjs` (self-signed HTTPS warning check). |
+| `tools/` | `loadtest.mjs` (simulated players). |
 
 ## Build and install (Windows laptop, S21 over USB)
 
@@ -57,7 +58,7 @@ players scan the Wi-Fi QR code, then the game QR code). Record everything in RES
 
 1. **Diagnostics, once per browser.** Open `http://<ip>:8080/?mode=diag` on the Samsung TV and
    each phone browser. Photograph or copy the table into RESULTS.md (Chromium version sets the
-   Vite legacy target; the feature rows feed the §3.4 HTTPS-only feature list).
+   Vite legacy target; the feature rows record what works over plain HTTP).
 2. **Join time.** For each phone: start a stopwatch when the camera app opens, stop it when the
    Tap button appears. The page also measures page load → seat itself ("Join time" on the
    player screen, `joinMs` in `/stats.json`).
@@ -66,12 +67,10 @@ players scan the Wi-Fi QR code, then the game QR code). Record everything in RES
    history, (c) turn Wi-Fi off for 5 s then on, (d) airplane mode on/off. Each time the player
    should return to the same seat with the same tap count. "Last reconnect" on the player
    screen and `reconnectMs` in `/stats.json` give the times.
-5. **Screen stays on.** Leave a player phone at its normal screen timeout and don't touch it
-   for longer than that timeout. The game should keep the screen on by itself: the player
-   screen's "Keep screen on" row shows how ("Hidden video" over plain HTTP). If the screen goes
-   off anyway, "Screen slept" counts it and the host app shows a screen-sleep drop. Then press
-   the power button, wait 30 s, unlock, and note "Last reconnect" (measured from unlock to
-   being back in the seat).
+5. **Screen sleep.** Screens are allowed to sleep (spec §3.4); what matters is that the player
+   loses nothing. Leave a player phone until its screen turns off, or press the power button.
+   Wait 30 s, unlock, and note "Last reconnect" (measured from unlock to being back in the
+   seat). The player must have the same seat and score and see the current counter.
 6. **Soak, 30+ minutes.** 10 phones and the TV joined, plus simulated players from the laptop
    (on the same network):
 
@@ -81,27 +80,18 @@ players scan the Wi-Fi QR code, then the game QR code). Record everything in RES
 
    Turn the S21 screen **off** and leave it on battery. Leave the player phones at their normal
    screen timeout and don't touch them. At the end, check the host app and
-   `http://<ip>:8080/stats.json`: `unexpectedCloses` (network drops) must be 0, `sleepCloses`
-   shows whether keep-awake held the player screens on, and `tickLateMs.max` shows whether the
-   server's clock kept time with the host screen off.
+   `http://<ip>:8080/stats.json`: `unexpectedCloses` (network drops) must be 0, every player
+   must still have their seat, and `tickLateMs.max` shows whether the server's clock kept time
+   with the host screen off. `sleepCloses` (player screens sleeping) is expected and fine.
    Save `http://<ip>:8080/log.jsonl` next to RESULTS.md.
-7. **HTTPS warnings.** On the laptop (Git Bash, which has `openssl`):
-
-   ```bash
-   cd spike/tools && node https-check.mjs
-   ```
-
-   Open the printed `https://<laptop-ip>:8443/?mode=diag` on Android Chrome, iOS Safari, Samsung
-   Internet and the Samsung TV. Screenshot each warning and note how many taps it takes to get
-   past it (or whether you can at all).
-
 ## What counts as a drop
 
 The server logs every socket close. Codes 1000/1001 are clean (tab closed, refresh, navigated
 away) and 4000 means another tab took over the seat. Any other close is a drop:
 
 - `sleepCloses`: the player's page had reported itself hidden (screen off) before the drop.
-  These measure keep-awake, not the network. If a page freezes before it can report, the drop
-  is counted as a network drop, so this errs against the server.
+  Screens sleeping is normal; these only have to end with the player back in their seat. If a
+  page freezes before it can report, the drop is counted as a network drop, so this errs
+  against the server.
 - `unexpectedCloses`: the page was visible. These must be explained by a test step (Wi-Fi off,
   airplane mode) or the run failed. During the soak there are no test steps, so it must be 0.
