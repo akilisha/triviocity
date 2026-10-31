@@ -58,6 +58,7 @@
   --border-width: 1px;
   --focus-width: 3px;
   --keep-awake-size: 2px;
+  --disc-size: 4rem;
 
   /* Motion */
   --motion-fast: 120ms;

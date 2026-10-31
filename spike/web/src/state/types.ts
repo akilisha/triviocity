@@ -1,5 +1,8 @@
 export type Mode = 'player' | 'tv' | 'diag';
 
+/** Which video the keep-awake fallback plays; chosen with ?awake= so variants can be compared. */
+export type KeepAwakeVideo = 'disc' | 'tiny';
+
 export type KeepAwakeMethod = 'starting' | 'wakeLock' | 'video' | 'blocked' | 'failed';
 
 export type ConnectionStatus = 'connecting' | 'open' | 'reconnecting' | 'replaced';

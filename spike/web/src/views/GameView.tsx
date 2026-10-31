@@ -14,7 +14,7 @@ const ms = (value: number | null) => (value === null ? '–' : `${value} ms`);
 const KEEP_AWAKE_LABELS = {
   starting: 'Starting…',
   wakeLock: 'Wake Lock API',
-  video: 'Hidden video',
+  video: 'Video',
   blocked: 'Blocked, tap the screen',
   failed: 'Failed',
 } as const;
@@ -29,8 +29,8 @@ export function GameView() {
 
   return (
     <Screen title={me ? `${me.emoji} ${me.name}` : 'Triviocity'} status={store.connection.value}>
-      {isPlayer && <KeepAwake />}
       <Card>
+        {isPlayer && <KeepAwake video={store.keepAwakeVideo.value} />}
         <div class={styles.stats}>
           <Stat label="Counter" value={store.counter.value} size="display" />
           <Stat label={isPlayer ? 'Your taps' : 'Room taps'} value={isPlayer ? (me?.taps ?? 0) : store.totalTaps.value} />
@@ -56,7 +56,12 @@ export function GameView() {
               ['Reconnects', String(store.reconnects.value)],
               ['Last reconnect', ms(store.lastReconnectMs.value)],
               ['Longest tick gap', ms(store.maxTickGapMs.value || null)],
-              ['Keep screen on', KEEP_AWAKE_LABELS[store.keepAwake.value]],
+              [
+                'Keep screen on',
+                store.keepAwake.value === 'video'
+                  ? `${store.keepAwakeVideo.value === 'disc' ? 'Spinning disc' : 'Hidden'} video`
+                  : KEEP_AWAKE_LABELS[store.keepAwake.value],
+              ],
               ['Screen slept', String(store.screenSleeps.value)],
             ]}
           />

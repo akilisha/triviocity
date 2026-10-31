@@ -48,6 +48,15 @@ each soak run next to this file.
 | Samsung Internet | | |
 | Samsung TV | | |
 
+## Keeping player screens on (plain HTTP, so no Wake Lock API)
+
+Pick the video with `?awake=disc` (default, visible 4rem spinning disc) or `?awake=tiny`.
+
+| Phone / browser | Variant | Screen stayed on by itself? |
+|---|---|---|
+| Galaxy S25 / Chrome | `tiny` (2 px, near-invisible, muted) | **No**: turned off at the normal timeout |
+| Galaxy S25 / Chrome | `disc` (visible, muted) | |
+
 ## Baseline (desktop JVM, before device testing)
 
 The server core was run on a desktop JVM in the development container against 40 simulated
